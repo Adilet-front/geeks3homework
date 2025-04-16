@@ -9,6 +9,7 @@ import {
   Text,
   TextInput,
   Title,
+  Box,
 } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import {
@@ -41,12 +42,20 @@ function App() {
               </ActionIcon>
             </Group>
             <Card>
-              <Text sx={{ marginTop: "px" }}>You have on task</Text>
-              <ActionIcon size="ig" ml={400} mt={-20}>
-                <IconPencil />
-                <IconTrash />
-              </ActionIcon>
-              <Text>knvljsfjlblj</Text>
+              <Group position="apart">
+                <Box>
+                  <Text sx={{ marginTop: "10px" }}>You have on task</Text>
+                  <Text>ggwh</Text>
+                </Box>
+                <Box sx={{ display: "flex", gap: "10px" }}>
+                  <ActionIcon size="lg" color="red">
+                    <IconTrash />
+                  </ActionIcon>
+                  <ActionIcon size="lg" color="blue">
+                    <IconPencil />
+                  </ActionIcon>
+                </Box>
+              </Group>
             </Card>
             <Button sx={{ width: "100%", marginTop: "12px" }}> New Task</Button>
           </Container>
