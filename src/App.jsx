@@ -26,8 +26,8 @@ function App() {
     defaultValue: "light",
   });
 
-  const [isOpenEdit, setOpenEdit] = useState(false);
-  console.log(isOpenEdit);
+  const [isOpeneidt, setOpenedit] = useState(false);
+  console.log(isOpeneidt);
 
   const [isModel, setModel] = useState(false);
 
@@ -51,8 +51,19 @@ function App() {
     setModel(false);
     setTitle("");
     setSummary("");
+    setOpenedit(false);
   };
 
+  const editTask = () => {
+    const newNewlist = newList.map((el) => {
+      if (el.id === isOpeneidt) {
+        el.title = isTitle;
+        el.summary = isSummary;
+      }
+      return el;
+    });
+    setList(newNewlist);
+  };
   let newList = isList;
 
   const addTask = () => {
@@ -77,15 +88,6 @@ function App() {
     setList(newNewList);
   };
 
-  const editTask = () => {
-    const task = newNewList.map((el) => el.id === isOpenEdit);
-    if (el.id === isOpenEdit) {
-      el.title = isTitle;
-      el.summery = isSummary;
-    }
-    return el;
-  };
-
   return (
     <>
       <MantineProvider
@@ -100,7 +102,7 @@ function App() {
             centered
             withCloseButton={false}
             size="md"
-            title={isOpenEdit ? "Edit Task" : "Create Task"}
+            title={isOpeneidt ? "Edit task" : "New Task"}
           >
             <TextInput
               value={isTitle}
@@ -122,14 +124,15 @@ function App() {
               </Button>
               <Button
                 onClick={() => {
-                  if (isOpenEdit) {
+                  if (isOpeneidt) {
                     editTask();
+                  } else {
+                    addTask();
                   }
-                  addTask();
                   closeModal();
                 }}
               >
-                Create Tasks
+                {isOpeneidt ? "Edit Task" : "Creat Task"}
               </Button>
             </Group>
           </Modal>
@@ -156,7 +159,16 @@ function App() {
                       >
                         <IconTrash />
                       </ActionIcon>
-                      <ActionIcon size="lg" color="blue">
+                      <ActionIcon
+                        onClick={() => {
+                          setOpenedit(el.id);
+                          setTitle(el.title);
+                          setSummary(el.summary);
+                          openModal();
+                        }}
+                        size="lg"
+                        color="blue"
+                      >
                         <IconPencil />
                       </ActionIcon>
                     </Box>
@@ -167,6 +179,7 @@ function App() {
             ) : (
               <Text sx={{ marginTop: "10px" }}>You have on task</Text>
             )}
+
             <Button
               onClick={openModal}
               sx={{ width: "100%", marginTop: "12px" }}
