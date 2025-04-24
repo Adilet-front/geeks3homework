@@ -11,85 +11,105 @@ import {
   Title,
   Box,
 } from "@mantine/core";
-import { useLocalStorage } from "@mantine/hooks";
 import {
   IconSun,
   IconTrash,
   IconMoonStars,
   IconPencil,
 } from "@tabler/icons-react";
-import { useState } from "react";
+import React, { Component } from "react";
 
-function App() {
-  const [isTheme, setTheme] = useLocalStorage({
-    key: "theme",
-    defaultValue: "light",
-  });
+class App extends Component {
+  constructor(props) {
+    super(props);
+    const savedTheme = localStorage.getItem("theme") || "light";
+    const savedList = JSON.parse(localStorage.getItem("list") || "[]");
 
-  const [isOpeneidt, setOpenedit] = useState(false);
-  console.log(isOpeneidt);
+    this.state = {
+      isTheme: savedTheme,
+      isModel: false,
+      isOpeneidt: false,
+      isTitle: "",
+      isSummary: "",
+      isList: savedList,
+      editId: null,
+    };
+  }
 
-  const [isModel, setModel] = useState(false);
-
-  const [isTitle, setTitle] = useState("");
-  const [isSummary, setSummary] = useState("");
-
-  const [isList, setList] = useLocalStorage({
-    key: "list",
-    defaultValue: [],
-  });
-
-  const changeTheme = () => {
-    setTheme((stateTheme) => (stateTheme === "light" ? "dark" : "light"));
+  changeTheme = () => {
+    const newTheme = this.state.isTheme === "light" ? "dark" : "light";
+    this.setState({ isTheme: newTheme });
+    localStorage.setItem("theme", newTheme);
   };
 
-  const openModal = () => {
-    setModel(true);
+  openModal = () => {
+    this.setState({ isModel: true });
   };
 
-  const closeModal = () => {
-    setModel(false);
-    setTitle("");
-    setSummary("");
-    setOpenedit(false);
-  };
-
-  const editTask = () => {
-    const newNewlist = newList.map((el) => {
-      if (el.id === isOpeneidt) {
-        el.title = isTitle;
-        el.summary = isSummary;
-      }
-      return el;
+  closeModal = () => {
+    this.setState({
+      isModel: false,
+      isTitle: "",
+      isSummary: "",
+      isOpeneidt: false,
+      editId: null,
     });
-    setList(newNewlist);
   };
-  let newList = isList;
 
-  const addTask = () => {
+  addTask = () => {
+    const { isTitle, isSummary, isList } = this.state;
     if (isTitle === "" && isSummary === "") {
-      alert("empty");
+      alert("Empty");
       return;
     }
-    const randomId = Math.floor(Math.random() * 1000) + 1;
 
     const item = {
-      id: randomId,
+      id: Math.floor(Math.random() * 1000) + 1,
       title: isTitle,
       summary: isSummary,
     };
 
-    newList.push(item);
-    setList(newList);
+    const newList = [...isList, item];
+    this.setState({ isList: newList });
+    localStorage.setItem("list", JSON.stringify(newList));
+    this.closeModal();
   };
 
-  const deleteTask = (id) => {
-    const newNewList = newList.filter((el) => el.id !== id);
-    setList(newNewList);
+  editTask = () => {
+    const { isList, isTitle, isSummary, editId } = this.state;
+    const updatedList = isList.map((el) => {
+      if (el.id === editId) {
+        return { ...el, title: isTitle, summary: isSummary };
+      }
+      return el;
+    });
+
+    this.setState({ isList: updatedList });
+    localStorage.setItem("list", JSON.stringify(updatedList));
+    this.closeModal();
   };
 
-  return (
-    <>
+  deleteTask = (id) => {
+    const newList = this.state.isList.filter((el) => el.id !== id);
+    this.setState({ isList: newList });
+    localStorage.setItem("list", JSON.stringify(newList));
+  };
+
+  handleEdit = (task) => {
+    this.setState({
+      isOpeneidt: true,
+      isTitle: task.title,
+      isSummary: task.summary,
+      isModel: true,
+      editId: task.id,
+    });
+  };
+
+  render() {
+    const { isTheme, isModel, isOpeneidt, isTitle, isSummary, isList } =
+      this.state;
+
+    return (
       <MantineProvider
         theme={{ colorScheme: isTheme, defaultRadius: "md" }}
         withGlobalStyles
@@ -98,7 +118,7 @@ function App() {
         <div className="App">
           <Modal
             opened={isModel}
-            onClose={closeModal}
+            onClose={this.closeModal}
             centered
             withCloseButton={false}
             size="md"
@@ -106,68 +126,56 @@ function App() {
           >
             <TextInput
               value={isTitle}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => this.setState({ isTitle: e.target.value })}
               mt="md"
-              placeholder="TaskTitle"
+              placeholder="Task Title"
               label="Title"
             />
             <TextInput
               value={isSummary}
-              onChange={(e) => setSummary(e.target.value)}
+              onChange={(e) => this.setState({ isSummary: e.target.value })}
               mt="md"
               placeholder="Task Summary"
               label="Summary"
             />
             <Group mt="md" position="apart">
-              <Button onClick={closeModal} variant="submit">
+              <Button onClick={this.closeModal} variant="submit">
                 Cancel
               </Button>
-              <Button
-                onClick={() => {
-                  if (isOpeneidt) {
-                    editTask();
-                  } else {
-                    addTask();
-                  }
-                  closeModal();
-                }}
-              >
-                {isOpeneidt ? "Edit Task" : "Creat Task"}
+              <Button onClick={isOpeneidt ? this.editTask : this.addTask}>
+                {isOpeneidt ? "Edit Task" : "Create Task"}
               </Button>
             </Group>
           </Modal>
+
           <Container size={550} my={40} sx={{ background: "inherit" }}>
             <Group position="apart">
               <Title>My tasks</Title>
-              <ActionIcon size="ig" color="blue" onClick={changeTheme}>
+              <ActionIcon size="lg" color="blue" onClick={this.changeTheme}>
                 {isTheme === "light" ? <IconMoonStars /> : <IconSun />}
               </ActionIcon>
             </Group>
+
             {isList.length > 0 ? (
               isList.map((el) => (
                 <Card key={el.id} withBorder mt="sm">
                   <Group position="apart">
                     <Box>
-                      <Text weight="bold">{el.title}</Text>
+                      <Text weight={500}>{el.title}</Text>
                     </Box>
                     <Box sx={{ display: "flex", gap: "10px" }}>
                       <ActionIcon
                         size="lg"
                         color="red"
                         variant="transparent"
-                        onClick={() => deleteTask(el.id)}
+                        onClick={() => this.deleteTask(el.id)}
                       >
                         <IconTrash />
                       </ActionIcon>
                       <ActionIcon
-                        onClick={() => {
-                          setOpenedit(el.id);
-                          setTitle(el.title);
-                          setSummary(el.summary);
-                          openModal();
-                        }}
                         size="lg"
                         color="blue"
+                        onClick={() => this.handleEdit(el)}
                       >
                         <IconPencil />
                       </ActionIcon>
@@ -177,21 +185,20 @@ function App() {
                 </Card>
               ))
             ) : (
-              <Text sx={{ marginTop: "10px" }}>You have on task</Text>
+              <Text sx={{ marginTop: "10px" }}>You have no tasks</Text>
             )}
 
             <Button
-              onClick={openModal}
+              onClick={this.openModal}
               sx={{ width: "100%", marginTop: "12px" }}
             >
-              {" "}
               New Task
             </Button>
           </Container>
         </div>
       </MantineProvider>
-    </>
-  );
+    );
+  }
 }
 
 export default App;
